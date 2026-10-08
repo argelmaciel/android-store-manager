@@ -3,7 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Swap - Gestão de Lojas de Celulares",
+  title: "MacApp - Gestão de Lojas de Celulares",
   description: "Gerencie sua loja de celulares de forma simples e eficiente",
 };
 

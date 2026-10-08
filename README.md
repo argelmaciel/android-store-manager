@@ -1,4 +1,4 @@
-# Swap - Gestão de Lojas de Celulares
+# MacApp - Gestão de Lojas de Celulares
 
 Aplicação web para gestão de lojas de celulares, com vendas, estoque e gestão de clientes.
 
