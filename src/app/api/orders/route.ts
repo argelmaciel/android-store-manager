@@ -94,6 +94,7 @@ export async function POST(request: Request) {
   }
 
   let total = 0;
+  const stockUpdates: Array<{ product_id: string; newStock: number }> = [];
   const orderItems: Array<{
     product_id: string;
     quantity: number;
@@ -140,6 +141,11 @@ export async function POST(request: Request) {
       unit_price: unitPrice,
       subtotal,
     });
+
+    stockUpdates.push({
+      product_id: item.product_id,
+      newStock: Number(product.stock) - item.quantity,
+    });
   }
 
   const orderPayload = {
@@ -182,11 +188,11 @@ export async function POST(request: Request) {
     );
   }
 
-  for (const item of orderItems) {
+  for (const update of stockUpdates) {
     const { error: stockError } = await supabaseAdmin
       .from("products")
-      .update({ stock: Number(product.stock) - item.quantity })
-      .eq("id", item.product_id);
+      .update({ stock: update.newStock })
+      .eq("id", update.product_id);
 
     if (stockError) {
       return NextResponse.json(
