@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrCreateProfile, getUserId } from "@/lib/auth";
 
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function GET(request: Request) {
   const userId = await getUserId();
@@ -12,13 +12,13 @@ export async function GET(request: Request) {
   const profile = await getOrCreateProfile();
   const role = profile?.role;
 
-  let query = supabaseAdmin
+  let query = getSupabaseAdmin()
     .from("orders")
     .select("*")
     .order("created_at", { ascending: false });
 
   if (role === "store_manager" || role === "admin") {
-    const { data: stores } = await supabaseAdmin
+    const { data: stores } = await getSupabaseAdmin()
       .from("stores")
       .select("id")
       .eq("owner_id", userId);
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: product, error: productError } = await supabaseAdmin
+    const { data: product, error: productError } = await getSupabaseAdmin()
       .from("products")
       .select("price, stock")
       .eq("id", item.product_id)
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
     status: "pending",
   };
 
-  const { data: order, error: orderError } = await supabaseAdmin
+  const { data: order, error: orderError } = await getSupabaseAdmin()
     .from("orders")
     .insert(orderPayload)
     .select()
@@ -165,14 +165,14 @@ export async function POST(request: Request) {
     ...item,
   }));
 
-  const { error: itemsError } = await supabaseAdmin
+  const { error: itemsError } = await getSupabaseAdmin()
     .from("order_items")
     .insert(orderItemRows)
     .select()
     .maybeSingle();
 
   if (itemsError) {
-    await supabaseAdmin.from("orders").delete().eq("id", order.id);
+    await getSupabaseAdmin().from("orders").delete().eq("id", order.id);
     return NextResponse.json(
       { error: itemsError.message },
       { status: 500 }
@@ -180,7 +180,7 @@ export async function POST(request: Request) {
   }
 
   for (const update of stockUpdates) {
-    const { error: stockError } = await supabaseAdmin
+    const { error: stockError } = await getSupabaseAdmin()
       .from("products")
       .update({ stock: update.newStock })
       .eq("id", update.product_id);

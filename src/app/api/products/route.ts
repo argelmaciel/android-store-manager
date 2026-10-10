@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { getUserId } from "@/lib/auth";
 
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const storeId = searchParams.get("store_id");
 
-  let query = supabaseAdmin
+  let query = getSupabaseAdmin()
     .from("products")
     .select("*")
     .eq("is_active", true);
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from("products")
     .insert({
       store_id,

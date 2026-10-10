@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrCreateProfile, getUserId } from "@/lib/auth";
 
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function GET(
   request: Request,
@@ -18,7 +18,7 @@ export async function GET(
     return NextResponse.json({ error: "orderId is required" }, { status: 400 });
   }
 
-  const { data: order, error: orderError } = await supabaseAdmin
+  const { data: order, error: orderError } = await getSupabaseAdmin()
     .from("orders")
     .select("*")
     .eq("id", orderId)
@@ -33,7 +33,7 @@ export async function GET(
   const role = profile?.role;
   const isManager =
     (role === "store_manager" || role === "admin") &&
-    (await supabaseAdmin
+    (await getSupabaseAdmin()
       .from("stores")
       .select("id")
       .eq("id", order.store_id)
@@ -45,7 +45,7 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { data: items, error: itemsError } = await supabaseAdmin
+  const { data: items, error: itemsError } = await getSupabaseAdmin()
     .from("order_items")
     .select("*")
     .eq("order_id", orderId);

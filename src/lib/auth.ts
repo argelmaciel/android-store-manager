@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function getUserId(): Promise<string | null> {
   const user = await currentUser();
@@ -27,7 +27,7 @@ export async function getOrCreateProfile(): Promise<AuthProfile | null> {
     return null;
   }
 
-  const { data: existing } = await supabaseAdmin
+  const { data: existing } = await getSupabaseAdmin()
     .from("profiles")
     .select(PROFILE_COLUMNS)
     .eq("id", user.id)
@@ -47,7 +47,7 @@ export async function getOrCreateProfile(): Promise<AuthProfile | null> {
   const fullName =
     [user.firstName, user.lastName].filter(Boolean).join(" ") || null;
 
-  const { data: created } = await supabaseAdmin
+  const { data: created } = await getSupabaseAdmin()
     .from("profiles")
     .insert({
       id: user.id,
