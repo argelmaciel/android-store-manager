@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getUserId } from "@/lib/auth";
+import { getOrCreateProfile, getUserId } from "@/lib/auth";
 
+import { dbErrorResponse } from "@/lib/http";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function GET(request: Request) {
@@ -65,14 +66,61 @@ export async function POST(request: Request) {
     );
   }
 
+  const priceNumber = Number(price);
+  const stockNumber = Number(stock);
+
+  if (!Number.isFinite(priceNumber) || priceNumber < 0) {
+    return NextResponse.json(
+      { error: "price must be a number >= 0" },
+      { status: 400 }
+    );
+  }
+
+  if (!Number.isInteger(stockNumber) || stockNumber < 0) {
+    return NextResponse.json(
+      { error: "stock must be an integer >= 0" },
+      { status: 400 }
+    );
+  }
+
+  const profile = await getOrCreateProfile();
+  if (!profile) {
+    return NextResponse.json(
+      { error: "Perfil não encontrado para o usuário autenticado" },
+      { status: 404 }
+    );
+  }
+
+  // Só o dono da loja (ou admin) pode cadastrar no catálogo dela.
+  const { data: store, error: storeError } = await getSupabaseAdmin()
+    .from("stores")
+    .select("id, owner_id")
+    .eq("id", store_id)
+    .maybeSingle();
+
+  if (storeError) {
+    return dbErrorResponse(storeError, "consultar a loja");
+  }
+
+  if (!store) {
+    return NextResponse.json({ error: "Loja não encontrada" }, { status: 404 });
+  }
+
+  if (store.owner_id !== profile.id && profile.role !== "admin") {
+    return NextResponse.json(
+      { error: "Forbidden" },
+      { status: 403 }
+    );
+  }
+
   const { data, error } = await getSupabaseAdmin()
     .from("products")
     .insert({
       store_id,
       name,
       description,
-      price: Number(price),
-      stock: Number(stock),
+      price: priceNumber,
+      stock: stockNumber,
       image_url,
       sku,
     })
@@ -80,7 +128,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbErrorResponse(error, "cadastrar o produto");
   }
 
   return NextResponse.json({ data }, { status: 201 });

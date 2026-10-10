@@ -99,12 +99,28 @@ Todas as rotas exigem sessão do Clerk, exceto o catálogo público.
 | `/api/stores` | GET | Público (lojas ativas) |
 | `/api/stores` | POST | Autenticado (cria loja do usuário) |
 | `/api/products` | GET | Público (`?store_id=` opcional, só produtos ativos) |
-| `/api/products` | POST | Autenticado |
+| `/api/products` | POST | Dono da loja (ou admin) — terceiros recebem `403` |
 | `/api/orders` | GET | Autenticado (cliente vê seus pedidos, gerente vê os da loja) |
-| `/api/orders` | POST | Autenticado (valida estoque e preço no servidor) |
+| `/api/orders` | POST | Autenticado (loja ativa, itens da própria loja, estoque e preço validados no servidor) |
 | `/api/orders/[orderId]` | GET | Autenticado (cliente dono do pedido ou gerente da loja) |
 
 Chamadas de API sem sessão recebem `401` em JSON; páginas redirecionam para `/sign-in`.
+
+### Fluxo autenticado
+
+Login pelo Clerk → criar loja → cadastrar produto → fechar pedido foi exercitado
+com sessão real (instância de desenvolvimento do Clerk) contra um build local
+apontando para o Supabase de produção. O que o fluxo garante hoje:
+
+- `profiles` é criado na primeira ação autenticada, inclusive em `POST /api/stores`;
+- produto só entra no catálogo de quem é dono da loja (ou admin);
+- pedido exige loja ativa e itens da própria loja, e o total é calculado no servidor;
+- produto repetido no carrinho é agregado antes da checagem de estoque;
+- falha do banco vira status adequado (`409` para slug duplicado, `400` para payload
+  inválido) sem vazar nome de constraint nem SQLSTATE.
+
+A baixa de estoque usa compare-and-swap por produto e desfaz o pedido se a
+gravação conflitar, mas ainda não é uma transação única: veja o roadmap.
 
 ## Roadmap
 
@@ -116,6 +132,8 @@ Chamadas de API sem sessão recebem `401` em JSON; páginas redirecionam para `/
 - [ ] Proteção de branch em `main` e merge do PR com as rotas de API
 - [ ] Cloudflare DNS / Domínio + SSL (hoje só os aliases `*.vercel.app`)
 - [x] Backend: Route Handlers serverless no Vercel (sem servidor Express separado)
+- [x] Fluxo autenticado verificado ponta a ponta (login → loja → produto → pedido)
+- [ ] Pedido atômico: criar pedido, itens e baixa de estoque numa transação (função no Postgres)
 - [ ] Resend (emails)
 - [ ] PostHog (analytics)
 - [ ] Sentry (erro/performance)

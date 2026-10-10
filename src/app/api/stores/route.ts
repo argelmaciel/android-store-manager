@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getUserId } from "@/lib/auth";
+import { getOrCreateProfile, getUserId } from "@/lib/auth";
 
+import { dbErrorResponse } from "@/lib/http";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function GET() {
@@ -47,6 +48,16 @@ export async function POST(request: Request) {
     );
   }
 
+  // stores.owner_id referencia profiles(id): sem a linha de perfil o insert
+  // falha na primeira vez que o usuário cria uma loja.
+  const profile = await getOrCreateProfile();
+  if (!profile) {
+    return NextResponse.json(
+      { error: "Perfil não encontrado para o usuário autenticado" },
+      { status: 404 }
+    );
+  }
+
   const { data, error } = await getSupabaseAdmin()
     .from("stores")
     .insert({
@@ -56,13 +67,15 @@ export async function POST(request: Request) {
       logo_url,
       phone,
       address,
-      owner_id: userId,
+      owner_id: profile.id,
     })
     .select()
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbErrorResponse(error, "criar a loja", {
+      "23505": "esse slug já está em uso",
+    });
   }
 
   return NextResponse.json({ data }, { status: 201 });
