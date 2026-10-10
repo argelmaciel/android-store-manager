@@ -52,9 +52,12 @@ A identidade do app é do Clerk, então as chaves de usuário nas tabelas são
 O perfil em `profiles` é criado sob demanda na primeira requisição autenticada
 (`getOrCreateProfile` em `src/lib/auth.ts`), sem depender de webhook.
 
-Para provisionar o banco, aplique `supabase/migrations/001_initial_schema.sql`
-no SQL Editor do projeto Supabase. Sem isso as rotas respondem 500 com
-`Could not find the table 'public.stores' in the schema cache`.
+O banco de produção (`kufiimcpfnzlsulprgfo`) já está provisionado: a migração foi
+aplicada no SQL Editor e as rotas públicas de leitura respondem
+`200 {"data":[]}`. Em um projeto novo, aplique
+o `supabase/migrations/001_initial_schema.sql` no SQL Editor do Supabase; sem isso
+as rotas respondem 500 com `Could not find the table 'public.stores' in the
+schema cache`. A migração é idempotente, então pode ser reaplicada sem risco.
 
 O papel de um usuário começa como `customer`; para virar dono de loja, atualize
 manualmente a coluna `role` em `profiles` para `store_manager`.
