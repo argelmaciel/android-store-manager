@@ -6,9 +6,6 @@
 -- auth.users. Aplique este arquivo no SQL Editor do Supabase.
 -- ============================================
 
--- Extensões
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- ============================================
 -- Helper: id do usuário Clerk a partir do JWT
 -- (claim "sub" do token emitido pelo Clerk)
@@ -68,7 +65,7 @@ CREATE TRIGGER update_profiles_updated_at
 -- Stores (lojas / organizações)
 -- ============================================
 CREATE TABLE IF NOT EXISTS stores (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   description TEXT,
   owner_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -103,7 +100,7 @@ CREATE TRIGGER update_stores_updated_at
 -- Products (produtos)
 -- ============================================
 CREATE TABLE IF NOT EXISTS products (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
@@ -142,7 +139,7 @@ CREATE TRIGGER update_products_updated_at
 -- Orders (pedidos)
 -- ============================================
 CREATE TABLE IF NOT EXISTS orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
   status TEXT CHECK (status IN ('pending', 'paid', 'shipped', 'delivered', 'cancelled')) DEFAULT 'pending',
@@ -183,7 +180,7 @@ CREATE TRIGGER update_orders_updated_at
 -- Order Items (itens do pedido)
 -- ============================================
 CREATE TABLE IF NOT EXISTS order_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   quantity INTEGER NOT NULL CHECK (quantity > 0),

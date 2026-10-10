@@ -59,6 +59,17 @@ no SQL Editor do projeto Supabase. Sem isso as rotas respondem 500 com
 O papel de um usuário começa como `customer`; para virar dono de loja, atualize
 manualmente a coluna `role` em `profiles` para `store_manager`.
 
+## Testes
+
+```bash
+npm run db:check
+```
+
+Sobe um Postgres em WASM (PGlite), aplica `supabase/migrations/001_initial_schema.sql`
+do zero e valida as tabelas, o tipo das chaves de usuário, os padrões de consulta
+usados pelas rotas, o decremento de estoque, as views e o isolamento por RLS.
+Não exige Docker nem credenciais, então também roda no CI.
+
 ## Estrutura do Projeto
 
 ```
@@ -95,6 +106,7 @@ Chamadas de API sem sessão recebem `401` em JSON; páginas redirecionam para `/
 ## Roadmap
 
 - [x] Integração com Supabase (PostgreSQL) — cliente e migração versionada
+- [x] Migração verificada em Postgres local (`npm run db:check`): 18 checagens, incluindo RLS
 - [ ] Provisionar o banco aplicando `supabase/migrations/001_initial_schema.sql`
 - [x] Vercel Deploy
 - [x] CI no GitHub Actions (tipos + build)
