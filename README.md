@@ -107,9 +107,9 @@ Chamadas de API sem sessão recebem `401` em JSON; páginas redirecionam para `/
 
 - [x] Integração com Supabase (PostgreSQL) — cliente e migração versionada
 - [x] Migração verificada em Postgres local (`npm run db:check`): 18 checagens, incluindo RLS
-- [ ] Provisionar o banco aplicando `supabase/migrations/001_initial_schema.sql`
+- [x] Banco provisionado: migração aplicada no projeto Supabase de produção
 - [x] Vercel Deploy
-- [x] CI no GitHub Actions (tipos + build)
+- [ ] CI no GitHub Actions (arquivo pronto, falta o escopo `workflow` no token)
 - [ ] Proteção de branch em `main` e merge do PR com as rotas de API
 - [ ] Cloudflare DNS / Domínio + SSL (hoje só os aliases `*.vercel.app`)
 - [x] Backend: Route Handlers serverless no Vercel (sem servidor Express separado)
