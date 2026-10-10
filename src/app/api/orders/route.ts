@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getUserId } from "@/lib/auth";
+import { getOrCreateProfile, getUserId } from "@/lib/auth";
 
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -9,13 +9,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-
-  const role = (profile as { role?: string } | null)?.role;
+  const profile = await getOrCreateProfile();
+  const role = profile?.role;
 
   let query = supabaseAdmin
     .from("orders")
@@ -80,11 +75,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .eq("id", userId)
-    .single();
+  const profile = await getOrCreateProfile();
 
   if (!profile) {
     return NextResponse.json(

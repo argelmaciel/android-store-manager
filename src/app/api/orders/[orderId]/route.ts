@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getUserId } from "@/lib/auth";
+import { getOrCreateProfile, getUserId } from "@/lib/auth";
 
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -29,13 +29,8 @@ export async function GET(
   }
 
   const isCustomer = order.customer_id === userId;
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-
-  const role = (profile as { role?: string } | null)?.role;
+  const profile = await getOrCreateProfile();
+  const role = profile?.role;
   const isManager =
     (role === "store_manager" || role === "admin") &&
     (await supabaseAdmin
