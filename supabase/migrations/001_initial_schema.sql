@@ -1,15 +1,15 @@
--- ============================================
--- MacApp - Schema Inicial do Supabase
---
--- A identidade do app é do Clerk, portanto as chaves de usuário são
--- TEXT (ex.: user_2abc...) e não UUID, e não existe dependência de
--- auth.users. Aplique este arquivo no SQL Editor do Supabase.
--- ============================================
+/* ============================================ */
+/* MacApp - Schema Inicial do Supabase */
+/* */
+/* A identidade do app é do Clerk, portanto as chaves de usuário são */
+/* TEXT (ex.: user_2abc...) e não UUID, e não existe dependência de */
+/* auth.users. Aplique este arquivo no SQL Editor do Supabase. */
+/* ============================================ */
 
--- ============================================
--- Helper: id do usuário Clerk a partir do JWT
--- (claim "sub" do token emitido pelo Clerk)
--- ============================================
+/* ============================================ */
+/* Helper: id do usuário Clerk a partir do JWT */
+/* (claim "sub" do token emitido pelo Clerk) */
+/* ============================================ */
 CREATE OR REPLACE FUNCTION public.clerk_user_id()
 RETURNS TEXT AS $$
   SELECT NULLIF(
@@ -18,9 +18,9 @@ RETURNS TEXT AS $$
   );
 $$ LANGUAGE sql STABLE;
 
--- ============================================
--- Profiles (usuários vinculados ao Clerk)
--- ============================================
+/* ============================================ */
+/* Profiles (usuários vinculados ao Clerk) */
+/* ============================================ */
 CREATE TABLE IF NOT EXISTS profiles (
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
--- RLS: usuários só veem seu próprio perfil
+/* RLS: usuários só veem seu próprio perfil */
 DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 CREATE POLICY "Users can view own profile" ON profiles
   FOR SELECT USING (public.clerk_user_id() = id);
@@ -46,7 +46,7 @@ DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (public.clerk_user_id() = id);
 
--- Trigger para atualizar updated_at
+/* Trigger para atualizar updated_at */
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -61,9 +61,9 @@ CREATE TRIGGER update_profiles_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
 
--- ============================================
--- Stores (lojas / organizações)
--- ============================================
+/* ============================================ */
+/* Stores (lojas / organizações) */
+/* ============================================ */
 CREATE TABLE IF NOT EXISTS stores (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -80,12 +80,12 @@ CREATE TABLE IF NOT EXISTS stores (
 
 ALTER TABLE stores ENABLE ROW LEVEL SECURITY;
 
--- RLS: todos podem ver lojas ativas
+/* RLS: todos podem ver lojas ativas */
 DROP POLICY IF EXISTS "Anyone can view active stores" ON stores;
 CREATE POLICY "Anyone can view active stores" ON stores
   FOR SELECT USING (is_active = TRUE);
 
--- Apenas owner pode modificar sua loja
+/* Apenas owner pode modificar sua loja */
 DROP POLICY IF EXISTS "Owner can manage own store" ON stores;
 CREATE POLICY "Owner can manage own store" ON stores
   FOR ALL USING (owner_id = public.clerk_user_id());
@@ -96,9 +96,9 @@ CREATE TRIGGER update_stores_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
 
--- ============================================
--- Products (produtos)
--- ============================================
+/* ============================================ */
+/* Products (produtos) */
+/* ============================================ */
 CREATE TABLE IF NOT EXISTS products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
@@ -115,12 +115,12 @@ CREATE TABLE IF NOT EXISTS products (
 
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
--- RLS: todos podem ver produtos ativos
+/* RLS: todos podem ver produtos ativos */
 DROP POLICY IF EXISTS "Anyone can view active products" ON products;
 CREATE POLICY "Anyone can view active products" ON products
   FOR SELECT USING (is_active = TRUE);
 
--- Apenas o dono da loja pode gerenciar produtos
+/* Apenas o dono da loja pode gerenciar produtos */
 DROP POLICY IF EXISTS "Store owner can manage products" ON products;
 CREATE POLICY "Store owner can manage products" ON products
   FOR ALL USING (
@@ -135,9 +135,9 @@ CREATE TRIGGER update_products_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
 
--- ============================================
--- Orders (pedidos)
--- ============================================
+/* ============================================ */
+/* Orders (pedidos) */
+/* ============================================ */
 CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS orders (
 
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
--- RLS: cliente vê seus pedidos, store_manager vê pedidos de sua loja
+/* RLS: cliente vê seus pedidos, store_manager vê pedidos de sua loja */
 DROP POLICY IF EXISTS "Customers can view own orders" ON orders;
 CREATE POLICY "Customers can view own orders" ON orders
   FOR SELECT USING (customer_id = public.clerk_user_id());
@@ -176,9 +176,9 @@ CREATE TRIGGER update_orders_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at();
 
--- ============================================
--- Order Items (itens do pedido)
--- ============================================
+/* ============================================ */
+/* Order Items (itens do pedido) */
+/* ============================================ */
 CREATE TABLE IF NOT EXISTS order_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 
--- RLS: acesso via ordem (usando RLS de orders)
+/* RLS: acesso via ordem (usando RLS de orders) */
 DROP POLICY IF EXISTS "Order items accessible via orders" ON order_items;
 CREATE POLICY "Order items accessible via orders" ON order_items
   FOR ALL USING (
@@ -209,11 +209,11 @@ CREATE POLICY "Order items accessible via orders" ON order_items
     )
   );
 
--- ============================================
--- Views úteis
--- ============================================
+/* ============================================ */
+/* Views úteis */
+/* ============================================ */
 
--- View de estoque por loja
+/* View de estoque por loja */
 CREATE OR REPLACE VIEW store_inventory AS
 SELECT
   s.id AS store_id,
@@ -227,7 +227,7 @@ FROM stores s
 JOIN products p ON p.store_id = s.id
 WHERE s.is_active = TRUE AND p.is_active = TRUE;
 
--- View de pedidos com itens
+/* View de pedidos com itens */
 CREATE OR REPLACE VIEW order_details AS
 SELECT
   o.id AS order_id,
